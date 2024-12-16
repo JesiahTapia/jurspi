@@ -1,61 +1,42 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { hash } from 'bcryptjs';
-import { User } from '@/lib/models/User';
-import { sendResetEmail } from '@/lib/services/emailService';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { connectToDatabase } from '@/lib/db';
+import User from '@/lib/models/User';
 import crypto from 'crypto';
+import { sendEmail } from '@/lib/email';
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  if (req.method === 'POST') {
-    // Request password reset
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+
+  try {
+    await connectToDatabase();
     const { email } = req.body;
+
     const user = await User.findOne({ email });
-    
-    if (user) {
-      const resetToken = crypto.randomBytes(32).toString('hex');
-      const tokenExpiry = new Date(Date.now() + 3600000); // 1 hour
-
-      await User.updateOne(
-        { _id: user._id },
-        { 
-          resetToken,
-          resetTokenExpiry: tokenExpiry
-        }
-      );
-
-      await sendResetEmail(email, resetToken);
-    }
-
-    return res.status(200).json({ 
-      message: 'If an account exists, a reset email has been sent' 
-    });
-  }
-
-  if (req.method === 'PATCH') {
-    // Reset password
-    const { token, password } = req.body;
-    const user = await User.findOne({
-      resetToken: token,
-      resetTokenExpiry: { $gt: new Date() }
-    });
-
     if (!user) {
-      return res.status(400).json({ error: 'Invalid or expired token' });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    const hashedPassword = await hash(password, 12);
-    await User.updateOne(
-      { _id: user._id },
-      {
-        password: hashedPassword,
-        resetToken: null,
-        resetTokenExpiry: null
-      }
-    );
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
-    return res.status(200).json({ message: 'Password updated successfully' });
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = resetTokenExpiry;
+    await user.save();
+
+    await sendEmail({
+      to: email,
+      subject: 'Password Reset',
+      text: `Reset your password here: ${process.env.NEXT_PUBLIC_URL}/auth/reset-password?token=${resetToken}`
+    });
+
+    return res.status(200).json({ message: 'Reset email sent' });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
-
-  return res.status(405).json({ error: 'Method not allowed' });
-};
-
-export default handler; 
+} 

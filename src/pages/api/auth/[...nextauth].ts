@@ -1,12 +1,10 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { MongoDBAdapter } from '@next-auth/mongodb-adapter';
-import { compare } from 'bcryptjs';
-import { clientPromise } from '@/lib/mongodb';
-import { User } from '@/lib/models/User';
+import { connectToDatabase } from '@/lib/db';
+import User from '@/lib/models/User';
+import bcrypt from 'bcryptjs';
 
 export default NextAuth({
-  adapter: MongoDBAdapter(clientPromise),
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -15,25 +13,30 @@ export default NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        const user = await User.findOne({ email: credentials.email });
-        if (!user) return null;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email and password required');
+        }
 
-        const isValid = await compare(credentials.password, user.password);
-        if (!isValid) return null;
+        await connectToDatabase();
+        const user = await User.findOne({ email: credentials.email });
+
+        if (!user) {
+          throw new Error('No user found');
+        }
+
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+        if (!isValid) {
+          throw new Error('Invalid password');
+        }
 
         return {
-          id: user._id,
+          id: user._id.toString(),
           email: user.email,
-          role: user.role,
-          name: user.name
+          role: user.role
         };
       }
     })
   ],
-  session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60 // 30 days
-  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -43,9 +46,20 @@ export default NextAuth({
       return token;
     },
     async session({ session, token }) {
-      session.user.role = token.role;
-      session.user.id = token.id;
+      if (session.user) {
+        session.user.role = token.role;
+        session.user.id = token.id;
+      }
       return session;
     }
-  }
+  },
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
+  },
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  secret: process.env.NEXTAUTH_SECRET
 }); 
