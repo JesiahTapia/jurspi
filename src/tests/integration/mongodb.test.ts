@@ -10,7 +10,7 @@ describe('MongoDB Connection', () => {
 
   it('should handle connection errors', async () => {
     const originalUri = process.env.MONGODB_URI;
-    process.env.MONGODB_URI = 'mongodb://invalid:27017/test';
+    process.env.MONGODB_URI = 'mongodb://nonexistent:27017/test';
     
     try {
       await connectToDatabase();

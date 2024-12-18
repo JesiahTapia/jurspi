@@ -1,49 +1,25 @@
 import mongoose from 'mongoose';
-import { DocumentType, DocumentId, CaseId, UserId } from './types';
+import { IDocument } from '../types/interfaces';
 
-export interface IDocument {
-  documentId: DocumentId;
-  caseId: CaseId;
-  uploadedBy: UserId;
-  type: DocumentType;
-  title: string;
-  description?: string;
-  fileUrl: string;
-  fileSize: number;
-  mimeType: string;
-  version: number;
-  isActive: boolean;
-  metadata?: Record<string, any>;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const DocumentSchema = new mongoose.Schema<IDocument>({
-  documentId: { type: String, required: true, unique: true },
-  caseId: { type: String, required: true },
-  uploadedBy: { type: String, required: true },
+const documentSchema = new mongoose.Schema<IDocument>({
+  title: { type: String, required: true },
   type: { 
     type: String, 
-    enum: Object.values(DocumentType),
+    enum: ['CLAIM', 'RESPONSE', 'EVIDENCE', 'CONTRACT', 'OTHER'],
     required: true 
   },
-  title: { type: String, required: true },
-  description: { type: String },
   fileUrl: { type: String, required: true },
-  fileSize: { type: Number, required: true },
-  mimeType: { type: String, required: true },
-  version: { type: Number, default: 1 },
-  isActive: { type: Boolean, default: true },
-  metadata: { type: Map, of: mongoose.Schema.Types.Mixed }
-}, {
-  timestamps: true
-});
+  uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  uploadedAt: { type: Date, default: Date.now },
+  caseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Case', required: true },
+  metadata: {
+    size: Number,
+    mimeType: String,
+    version: { type: Number, default: 1 }
+  }
+}, { timestamps: true });
 
-// Add indexes for common queries
-DocumentSchema.index({ documentId: 1 }, { unique: true });
-DocumentSchema.index({ caseId: 1, type: 1 });
-DocumentSchema.index({ uploadedBy: 1 });
-DocumentSchema.index({ isActive: 1 });
-DocumentSchema.index({ version: 1 });
+documentSchema.index({ caseId: 1, type: 1 });
+documentSchema.index({ uploadedAt: -1 });
 
-export const Document = mongoose.models.Document || mongoose.model<IDocument>('Document', DocumentSchema); 
+export default mongoose.models.Document || mongoose.model<IDocument>('Document', documentSchema); 

@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { hash } from 'bcryptjs';
 import User from '@/lib/models/User';
 import Case from '@/lib/models/Case';
+import Document from '@/lib/models/Document';
 
 let mongod: MongoMemoryServer;
 
@@ -46,6 +47,20 @@ export const createTestCase = async (claimantId: string) => {
       amount: 1000,
       breachedClauses: [1],
       supportingEvidence: ['https://example.com/evidence.pdf']
+    }
+  });
+};
+
+export const createTestDocument = async (caseId: string, uploaderId: string) => {
+  return await Document.create({
+    title: 'Test Document',
+    type: 'EVIDENCE',
+    fileUrl: 'https://example.com/test.pdf',
+    uploadedBy: uploaderId,
+    caseId: caseId,
+    metadata: {
+      size: 1024,
+      mimeType: 'application/pdf'
     }
   });
 }; 
