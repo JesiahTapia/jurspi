@@ -6,6 +6,7 @@
 2. Party (Claimant/Respondent)
 3. Arbitrator
 4. Document
+5. TimelineEvent
 
 ## Relationships
 
@@ -13,9 +14,11 @@
 
 - Has one Claimant (Party)
 - Has one Respondent (Party)
-- Has one or more Arbitrators
+- Has many Arbitrators
 - Has many Documents
-- Contains timeline events
+- Has many TimelineEvents
+- Has one Contract
+- Has optional Evaluations
 
 References:
 
@@ -47,22 +50,62 @@ References:
 ### Document Model
 
 - Belongs to one Case
-- Uploaded by one Party or Arbitrator
-- Supports versioning
+- Uploaded by one User
+- Can be referenced by TimelineEvents
+- Supports versioning and metadata
 
 References:
 
 - caseId -> Case.caseId
 - uploadedBy -> UserId (Party.userId or Arbitrator.arbitratorId)
 
+### TimelineEvent Model
+
+- Belongs to one Case
+- Created by one User (Party/Arbitrator)
+- Can reference multiple Documents
+
+References:
+
+- caseId -> Case.caseId
+- createdBy -> UserId (Party.userId or Arbitrator.arbitratorId)
+- relatedDocuments -> Document.\_id
+
 ## Indexes
 
 Key indexes are maintained on:
 
-- Case: caseId, caseNumber
-- Party: userId, email
-- Arbitrator: arbitratorId, email
-- Document: documentId, caseId
+### Case Indexes
+
+- caseNumber (unique)
+- status, filingDate
+- arbitrationRank
+- claimant.email, respondent.email
+- dispute.category
+
+### Document Indexes
+
+- caseId, type
+- uploadedAt
+- uploadedBy
+
+### Arbitrator Indexes
+
+- userId (unique)
+- specializations
+- rating
+- status
+
+### Party Indexes
+
+- userId
+- email
+- type
+
+### TimelineEvent Indexes
+
+- caseId, date
+- type, date
 
 ## Notes
 
@@ -76,3 +119,33 @@ Key indexes are maintained on:
 - Version control implemented for documents
 - Support for metadata and custom fields
 - Optimized for read-heavy operations
+
+## Validation Rules
+
+### Case
+
+- Unique case number
+- Valid status transitions
+- Required claimant information
+- Valid monetary amounts
+
+### Document
+
+- Valid file types
+- Maximum file size
+- Version control
+
+### TimelineEvent
+
+- Chronological order
+- Valid event types
+
+### Party
+
+- Valid email format
+- Required contact information
+
+### Arbitrator
+
+- Qualification verification
+- Case load limits

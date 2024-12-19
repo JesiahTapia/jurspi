@@ -1,12 +1,18 @@
-export interface IUser {
-  id: string;
-  email: string;
-  password: string;
-  role: 'USER' | 'ADMIN' | 'ARBITRATOR';
+export interface IBaseModel {
+  _id: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface IParty {
+export interface IUser extends IBaseModel {
+  email: string;
+  role: 'USER' | 'ADMIN' | 'ARBITRATOR';
+  name: string;
+}
+
+export interface IParty extends IBaseModel {
   type: 'CLAIMANT' | 'RESPONDENT';
+  userId: string;
   name: string;
   email: string;
   phone?: string;
@@ -25,12 +31,23 @@ export interface IParty {
   }>;
 }
 
-export interface IArbitrator {
+export interface IArbitrator extends IBaseModel {
   userId: string;
   specializations: string[];
   availability: boolean;
   cases: string[];
   rating?: number;
+  qualifications: Array<{
+    title: string;
+    issuer: string;
+    dateObtained: Date;
+    expiryDate?: Date;
+  }>;
+  experience: {
+    yearsOfPractice: number;
+    totalCases: number;
+    successRate?: number;
+  };
 }
 
 export interface IDocument {

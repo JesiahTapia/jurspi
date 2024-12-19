@@ -21,5 +21,7 @@ const documentSchema = new mongoose.Schema<IDocument>({
 
 documentSchema.index({ caseId: 1, type: 1 });
 documentSchema.index({ uploadedAt: -1 });
+documentSchema.index({ uploadedBy: 1 });
+documentSchema.index({ 'metadata.version': 1 });
 
 export default mongoose.models.Document || mongoose.model<IDocument>('Document', documentSchema); 
