@@ -8,14 +8,14 @@ import { errorHandler } from '@/middleware/errorHandler';
 import { z } from 'zod';
 
 const documentSchema = z.object({
-  title: z.string(),
-  type: z.enum(['CONTRACT', 'EVIDENCE', 'RESPONSE', 'COUNTERCLAIM']),
+  title: z.string().min(1),
+  type: z.enum(['CLAIM', 'RESPONSE', 'EVIDENCE', 'CONTRACT', 'OTHER']),
   fileUrl: z.string().url(),
   metadata: z.object({
     size: z.number(),
     mimeType: z.string(),
-    version: z.number().default(1)
-  })
+    version: z.number().optional()
+  }).optional()
 });
 
 export const config = {
@@ -42,7 +42,6 @@ export default async function handler(
 
     const { id } = req.query;
     await connectToDatabase();
-
     await validateRequest(documentSchema)(req, res, () => {});
 
     const case_ = await Case.findOneAndUpdate(
@@ -69,9 +68,9 @@ export default async function handler(
       return res.status(404).json({ message: 'Case not found' });
     }
 
-    return res.status(201).json({
-      success: true,
-      data: case_.documents[case_.documents.length - 1]
+    return res.status(201).json({ 
+      success: true, 
+      data: case_.documents[case_.documents.length - 1] 
     });
   } catch (error) {
     return errorHandler(error, req, res);

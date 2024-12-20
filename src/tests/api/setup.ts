@@ -8,6 +8,9 @@ import Document from '@/lib/models/Document';
 let mongod: MongoMemoryServer;
 
 export const setupTestDB = async () => {
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
   mongod = await MongoMemoryServer.create();
   await mongoose.connect(mongod.getUri());
 };
@@ -33,22 +36,41 @@ export const createTestUser = async () => {
   });
 };
 
-export const createTestCase = async (claimantId: string) => {
-  return await Case.create({
-    claimant: claimantId,
-    status: 'PENDING_INITIAL_EVALUATION',
+export const createTestCase = async (userId: string) => {
+  const caseData = {
+    caseNumber: 'ARB-2024-001',
+    status: 'FILED',
+    claimant: {
+      type: 'CLAIMANT',
+      name: 'John Doe',
+      email: 'john@example.com',
+      address: {
+        street: '123 Main St',
+        city: 'New York',
+        state: 'NY',
+        zipCode: '10001',
+        country: 'USA'
+      }
+    },
+    dispute: {
+      description: 'Contract breach',
+      amount: 50000,
+      category: 'CONTRACT'
+    },
     contract: {
-      title: 'Test Contract',
+      title: 'Service Agreement',
       fileUrl: 'https://example.com/contract.pdf',
-      clauses: [{ number: 1, text: 'Test clause' }]
+      clauses: [{ number: 1, text: 'Service terms' }]
     },
     claimDetails: {
-      description: 'Test claim',
-      amount: 1000,
+      description: 'Failed to deliver services',
+      amount: 50000,
       breachedClauses: [1],
-      supportingEvidence: ['https://example.com/evidence.pdf']
+      supportingEvidence: []
     }
-  });
+  };
+
+  return await Case.create(caseData);
 };
 
 export const createTestDocument = async (caseId: string, uploaderId: string) => {
