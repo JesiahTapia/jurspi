@@ -37,7 +37,7 @@ export const createTestUser = async () => {
 };
 
 export const createTestCase = async (userId: string) => {
-  const caseData = {
+  return await Case.create({
     caseNumber: 'ARB-2024-001',
     status: 'FILED',
     claimant: {
@@ -68,9 +68,7 @@ export const createTestCase = async (userId: string) => {
       breachedClauses: [1],
       supportingEvidence: []
     }
-  };
-
-  return await Case.create(caseData);
+  });
 };
 
 export const createTestDocument = async (caseId: string, uploaderId: string) => {

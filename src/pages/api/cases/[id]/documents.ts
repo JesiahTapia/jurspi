@@ -1,78 +1,32 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]';
-import { connectToDatabase } from '@/lib/db';
-import Case from '@/lib/models/Case';
-import { validateRequest } from '@/middleware/validateRequest';
-import { errorHandler } from '@/middleware/errorHandler';
-import { z } from 'zod';
+import { Case } from '@/models/Case';
+import { authMiddleware } from '@/lib/middleware/authMiddleware';
+import { caseAccessMiddleware } from '@/lib/middleware/caseAccessMiddleware';
 
-const documentSchema = z.object({
-  title: z.string().min(1),
-  type: z.enum(['CLAIM', 'RESPONSE', 'EVIDENCE', 'CONTRACT', 'OTHER']),
-  fileUrl: z.string().url(),
-  metadata: z.object({
-    size: z.number(),
-    mimeType: z.string(),
-    version: z.number().optional()
-  }).optional()
-});
-
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb'
-    }
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
-};
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+  const { id } = req.query;
+  const { title, type, fileUrl, metadata } = req.body;
+
   try {
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    if (req.method !== 'POST') {
-      return res.status(405).json({ message: 'Method not allowed' });
-    }
-
-    const { id } = req.query;
-    await connectToDatabase();
-    await validateRequest(documentSchema)(req, res, () => {});
-
-    const case_ = await Case.findOneAndUpdate(
-      {
-        _id: id,
-        $or: [
-          { claimant: session.user.id },
-          { respondent: session.user.id }
-        ]
-      },
-      {
-        $push: {
-          documents: {
-            ...req.body,
-            uploadedBy: session.user.id,
-            uploadedAt: new Date()
-          }
-        }
-      },
-      { new: true }
-    );
-
+    const case_ = await Case.findById(id);
     if (!case_) {
-      return res.status(404).json({ message: 'Case not found' });
+      return res.status(404).json({ success: false, message: 'Case not found' });
     }
+
+    case_.documents.push({ title, type, fileUrl, metadata });
+    await case_.save();
 
     return res.status(201).json({ 
       success: true, 
       data: case_.documents[case_.documents.length - 1] 
     });
   } catch (error) {
-    return errorHandler(error, req, res);
+    return res.status(400).json({ success: false, message: error.message });
   }
-} 
+};
+
+export default authMiddleware(caseAccessMiddleware(handler)); 
