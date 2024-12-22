@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Case } from '@/models/Case';
+import Case from '@/lib/models/Case';
 import { authMiddleware } from '@/lib/middleware/authMiddleware';
 import { caseAccessMiddleware } from '@/lib/middleware/caseAccessMiddleware';
 
