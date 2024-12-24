@@ -1,24 +1,19 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth/next';
 
-declare module 'next' {
-  interface NextApiRequest {
-    user?: {
-      id: string;
-      email: string;
-    };
-  }
-}
-
-export const authMiddleware = (handler: any) => async (
+export const authMiddleware = (handler: Function) => async (
   req: NextApiRequest,
   res: NextApiResponse
 ) => {
-  // Mock authentication for tests
-  if (process.env.NODE_ENV === 'test') {
-    req.user = { id: 'test-user-id', email: 'test@example.com' };
+  if (process.env.NODE_ENV === 'test' && req.user) {
     return handler(req, res);
   }
-  
-  // Add actual auth logic here
+
+  const session = await getServerSession(req, res);
+  if (!session) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+
+  req.user = session.user;
   return handler(req, res);
 }; 

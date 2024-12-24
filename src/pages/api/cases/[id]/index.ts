@@ -35,10 +35,7 @@ export default async function handler(
     if (req.method === 'GET') {
       const case_ = await Case.findOne({
         _id: id,
-        $or: [
-          { claimant: session.user.id },
-          { respondent: session.user.id }
-        ]
+        claimant: session.user.id
       });
 
       if (!case_) {
@@ -54,10 +51,7 @@ export default async function handler(
       const case_ = await Case.findOneAndUpdate(
         {
           _id: id,
-          $or: [
-            { claimant: session.user.id },
-            { respondent: session.user.id }
-          ]
+          claimant: session.user.id
         },
         { $set: req.body },
         { new: true }

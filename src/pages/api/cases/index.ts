@@ -3,59 +3,38 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { connectToDatabase } from '@/lib/db';
 import Case from '@/lib/models/Case';
-import { validateRequest } from '@/middleware/validateRequest';
+import { validateCase, createCaseSchema } from '@/lib/middleware/validation';
 import { errorHandler } from '@/middleware/errorHandler';
-import { z } from 'zod';
 
-const createCaseSchema = z.object({
-  contract: z.object({
-    title: z.string(),
-    fileUrl: z.string().url(),
-    clauses: z.array(z.object({
-      number: z.number(),
-      text: z.string()
-    }))
-  }),
-  claimDetails: z.object({
-    description: z.string(),
-    amount: z.number(),
-    breachedClauses: z.array(z.number()),
-    supportingEvidence: z.array(z.string())
-  })
-});
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
+    await connectToDatabase();
+
     if (req.method === 'POST') {
-      await validateRequest(createCaseSchema)(req, res, () => {});
-      await connectToDatabase();
-
-      const newCase = await Case.create({
-        ...req.body,
-        claimant: session.user.id,
-        status: 'PENDING_INITIAL_EVALUATION'
-      });
-
-      return res.status(201).json({ success: true, data: newCase });
+      try {
+        const validatedData = await createCaseSchema.parseAsync(req.body);
+        const newCase = await Case.create({
+          ...validatedData,
+          claimant: {
+            ...validatedData.claimant,
+            userId: session.user.id
+          }
+        });
+        return res.status(201).json({ success: true, data: newCase });
+      } catch (error) {
+        return errorHandler(error, req, res);
+      }
     }
 
     if (req.method === 'GET') {
-      await connectToDatabase();
       const cases = await Case.find({
-        $or: [
-          { claimant: session.user.id },
-          { respondent: session.user.id }
-        ]
+        'claimant.userId': session.user.id
       });
-
       return res.status(200).json({ success: true, data: cases });
     }
 

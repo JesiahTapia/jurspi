@@ -29,29 +29,29 @@ describe('Ticket #3: Core API Routes', () => {
           status: 'FILED',
           claimant: {
             type: 'CLAIMANT',
-            name: 'John Doe',
-            email: 'john@example.com',
+            name: 'Test User',
+            email: 'test@example.com',
             address: {
-              street: '123 Main St',
-              city: 'New York',
-              state: 'NY',
-              zipCode: '10001',
-              country: 'USA'
+              street: '123 Test St',
+              city: 'Test City',
+              state: 'TS',
+              zipCode: '12345',
+              country: 'Test Country'
             }
           },
           dispute: {
-            description: 'Contract breach',
-            amount: 50000,
+            description: 'Test dispute',
+            amount: 1000,
             category: 'CONTRACT'
           },
           contract: {
-            title: 'Service Agreement',
+            title: 'Test Contract',
             fileUrl: 'https://example.com/contract.pdf',
-            clauses: [{ number: 1, text: 'Service terms' }]
+            clauses: [{ number: 1, text: 'Test clause' }]
           },
           claimDetails: {
-            description: 'Failed to deliver services',
-            amount: 50000,
+            description: 'Test claim',
+            amount: 1000,
             breachedClauses: [1],
             supportingEvidence: []
           }

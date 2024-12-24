@@ -79,8 +79,16 @@ const caseSchema = new mongoose.Schema<ICase>({
   caseNumber: { type: String, required: true, unique: true },
   status: {
     type: String,
-    enum: ['FILED', 'EVALUATION', 'RESPONSE_PENDING', 'IN_PROGRESS', 'CONCLUDED', 'DISMISSED'],
-    default: 'FILED'
+    required: true,
+    enum: [
+      'FILED',
+      'PENDING_INITIAL_EVALUATION',
+      'EVALUATION',
+      'RESPONSE_PENDING',
+      'IN_PROGRESS',
+      'CONCLUDED',
+      'DISMISSED'
+    ]
   },
   filingDate: { type: Date, default: Date.now },
   claimant: { type: partySchema, required: true },
