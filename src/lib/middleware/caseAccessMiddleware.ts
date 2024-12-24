@@ -1,36 +1,36 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import Case from '@/lib/models/Case';
+import { Types } from 'mongoose';
 
 export const caseAccessMiddleware = (handler: Function) => async (
   req: NextApiRequest,
   res: NextApiResponse
 ) => {
   try {
-    if (!req.query.id) {
-      return res.status(400).json({ success: false, message: 'Case ID required' });
-    }
-
     const caseId = req.query.id as string;
     const userId = req.user?.id;
 
     if (!userId) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
     const caseData = await Case.findById(caseId);
     if (!caseData) {
-      return res.status(404).json({ success: false, message: 'Case not found' });
+      return res.status(404).json({ message: 'Case not found' });
     }
 
-    // Allow access if user is claimant or respondent
-    if (caseData.claimant.toString() !== userId && 
-        caseData.respondent?.toString() !== userId) {
-      return res.status(403).json({ success: false, message: 'Forbidden' });
+    const claimantId = Types.ObjectId.isValid(caseData.claimant) 
+      ? caseData.claimant.toString()
+      : caseData.claimant._id?.toString();
+
+    if (claimantId !== userId.toString()) {
+      return res.status(403).json({ message: 'Forbidden' });
     }
 
+    req.case = caseData;
     return handler(req, res);
   } catch (error) {
     console.error('Case access error:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 }; 

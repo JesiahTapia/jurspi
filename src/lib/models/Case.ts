@@ -91,7 +91,10 @@ const caseSchema = new mongoose.Schema<ICase>({
     ]
   },
   filingDate: { type: Date, default: Date.now },
-  claimant: { type: partySchema, required: true },
+  claimant: {
+    type: mongoose.Schema.Types.Mixed,
+    required: true
+  },
   respondent: partySchema,
   arbitrators: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Arbitrator' }],
   documents: [documentSchema],

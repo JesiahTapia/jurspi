@@ -4,6 +4,7 @@ import { hash } from 'bcryptjs';
 import User from '@/lib/models/User';
 import Case from '@/lib/models/Case';
 import Document from '@/lib/models/Document';
+import { ObjectId } from 'mongodb';
 
 let mongod: MongoMemoryServer;
 
@@ -36,25 +37,11 @@ export const createTestUser = async () => {
   });
 };
 
-export const createTestCase = async (userId: string) => {
-  const user = await User.findById(userId);
-  if (!user) throw new Error('User not found');
-
+export const createTestCase = async (userId: ObjectId) => {
   return await Case.create({
     caseNumber: `ARB-${Date.now()}`,
     status: 'FILED',
-    claimant: {
-      type: 'CLAIMANT',
-      name: user.name || 'Test User',
-      email: user.email,
-      address: {
-        street: '123 Test St',
-        city: 'Test City',
-        state: 'TS',
-        zipCode: '12345',
-        country: 'Test Country'
-      }
-    },
+    claimant: userId,
     dispute: {
       description: 'Test dispute',
       amount: 1000,
@@ -63,14 +50,23 @@ export const createTestCase = async (userId: string) => {
     contract: {
       title: 'Test Contract',
       fileUrl: 'https://example.com/contract.pdf',
-      clauses: [{ number: 1, text: 'Test clause' }]
+      clauses: [{ 
+        number: 1, 
+        text: 'Test clause' 
+      }]
     },
     claimDetails: {
       description: 'Test claim',
       amount: 1000,
       breachedClauses: [1],
       supportingEvidence: []
-    }
+    },
+    respondentAnswer: {
+      counterClaims: []
+    },
+    arbitrators: [],
+    documents: [],
+    timeline: []
   });
 };
 
