@@ -1,10 +1,16 @@
 import { createMocks } from 'node-mocks-http';
-import { setupTestDB, closeTestDB, clearTestDB, createTestUser, createTestCase } from '../api/setup';
+import { 
+  setupTestDB, 
+  closeTestDB, 
+  clearTestDB,
+  createTestUser, 
+  createTestCase,
+  s3Mock 
+} from '../shared/testSetup';
 import { DocumentService } from '@/lib/services/documentService';
-import { s3Mock } from '../document-handling/setup';
-import { getServerSession } from 'next-auth/next';
 import { VirusScanService } from '@/lib/services/virusScanService';
 import documentHandler from '@/pages/api/cases/[id]/documents';
+import { getServerSession } from 'next-auth';
 
 jest.mock('next-auth/next');
 jest.mock('@/lib/services/virusScanService');
@@ -12,11 +18,10 @@ jest.mock('@/lib/services/virusScanService');
 describe('Ticket #5: Document Upload and Management System', () => {
   beforeAll(async () => await setupTestDB());
   afterAll(async () => await closeTestDB());
-
   beforeEach(async () => {
     await clearTestDB();
-    s3Mock.reset();
     jest.clearAllMocks();
+    s3Mock.reset();
     (VirusScanService.scanBuffer as jest.Mock).mockResolvedValue(true);
   });
 
@@ -129,16 +134,26 @@ describe('Ticket #5: Document Upload and Management System', () => {
         user: { id: unauthorizedUser._id, email: unauthorizedUser.email }
       });
 
+      const file = {
+        originalname: 'test.pdf',
+        buffer: Buffer.from('test document'),
+        mimetype: 'application/pdf',
+        size: 1024
+      } as Express.Multer.File;
+
       const { req, res } = createMocks({
         method: 'POST',
         query: { id: case_._id.toString() },
+        file,
         body: {
           title: 'Evidence',
-          type: 'EVIDENCE',
-          fileUrl: 'https://example.com/evidence.pdf'
+          type: 'EVIDENCE'
         }
       });
 
+      // Attach file to request like in upload.test.ts
+      (req as any).file = file;
+      
       await documentHandler(req, res);
       expect(res._getStatusCode()).toBe(403);
     });

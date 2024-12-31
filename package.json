@@ -13,7 +13,8 @@
     "test:mongodb-setup": "jest --runInBand --detectOpenHandles src/tests/integration/mongodb-env.test.ts src/tests/integration/setup.test.ts src/tests/integration/mongodb.test.ts src/tests/api/health/database.test.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/client-s3": "^3.726.1",
+    "@aws-sdk/s3-request-presigner": "^3.726.1",
     "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.0",

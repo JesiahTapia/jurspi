@@ -1,12 +1,14 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import { hash } from 'bcryptjs';
+import { S3Client } from '@aws-sdk/client-s3';
+import { mockClient } from 'aws-sdk-client-mock';
 import User from '@/lib/models/User';
 import Case from '@/lib/models/Case';
-import Document from '@/lib/models/Document';
-import { ObjectId } from 'mongodb';
 
+export const s3Mock = mockClient(S3Client);
 let mongod: MongoMemoryServer;
+let counter = 0;
 
 export const setupTestDB = async () => {
   if (mongoose.connection.readyState !== 0) {
@@ -17,8 +19,12 @@ export const setupTestDB = async () => {
 };
 
 export const closeTestDB = async () => {
-  await mongoose.disconnect();
-  await mongod.stop();
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
+  if (mongod) {
+    await mongod.stop();
+  }
 };
 
 export const clearTestDB = async () => {
@@ -30,14 +36,15 @@ export const clearTestDB = async () => {
 
 export const createTestUser = async () => {
   const password = await hash('password123', 10);
+  counter++;
   return await User.create({
-    email: 'test@example.com',
+    email: `test${counter}@example.com`,
     password,
     role: 'USER'
   });
 };
 
-export const createTestCase = async (userId: ObjectId) => {
+export const createTestCase = async (userId: string) => {
   return await Case.create({
     caseNumber: `ARB-${Date.now()}`,
     status: 'FILED',
@@ -70,16 +77,12 @@ export const createTestCase = async (userId: ObjectId) => {
   });
 };
 
-export const createTestDocument = async (caseId: string, uploaderId: string) => {
-  return await Document.create({
-    title: 'Test Document',
-    type: 'EVIDENCE',
-    fileUrl: 'https://example.com/test.pdf',
-    uploadedBy: uploaderId,
-    caseId: caseId,
-    metadata: {
-      size: 1024,
-      mimeType: 'application/pdf'
-    }
-  });
+export const createTestDocument = async (userId: string) => {
+  return {
+    originalName: 'test.pdf',
+    size: 1024,
+    mimeType: 'application/pdf',
+    key: `${userId}/test.pdf`,
+    version: 1
+  };
 }; 
