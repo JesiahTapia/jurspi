@@ -4,6 +4,7 @@ import { default as caseDetailHandler } from '@/pages/api/cases/[id]';
 import { setupTestDB, closeTestDB, clearTestDB, createTestUser, createTestCase } from '@/tests/api/setup';
 import { getServerSession } from 'next-auth/next';
 import { default as documentHandler } from '@/pages/api/cases/[id]/documents';
+import { Case } from '@/models/Case';
 
 jest.mock('next-auth/next');
 
@@ -106,8 +107,12 @@ describe('Ticket #3: Core API Routes', () => {
         }
       });
 
+      req.user = { id: user._id };
       await documentHandler(req, res);
       expect(res._getStatusCode()).toBe(201);
+      
+      const updatedCase = await Case.findById(case_._id);
+      expect(updatedCase?.documents).toHaveLength(1);
     });
   });
 
