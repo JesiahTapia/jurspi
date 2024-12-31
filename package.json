@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest --detectOpenHandles",
+    "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:mongodb-setup": "jest --runInBand --detectOpenHandles src/tests/integration/mongodb-env.test.ts src/tests/integration/setup.test.ts src/tests/integration/mongodb.test.ts src/tests/api/health/database.test.ts"

@@ -1,19 +1,58 @@
 import { createMocks } from 'node-mocks-http';
 import uploadHandler from '@/pages/api/documents/upload';
-import { setupTestDB, createTestUser } from './setup';
+import { setupTestDB, createTestUser, createTestCase } from '../api/setup';
 import { getServerSession } from 'next-auth/next';
+import { s3Mock } from './setup';
 
 jest.mock('next-auth/next');
 
 describe('Document Upload', () => {
-  let mongod;
-
-  beforeAll(async () => {
-    mongod = await setupTestDB();
+  beforeAll(async () => await setupTestDB());
+  afterAll(async () => await closeTestDB());
+  
+  beforeEach(async () => {
+    await clearTestDB();
+    s3Mock.reset();
+    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
-    await mongod.stop();
+  it('should handle file upload successfully', async () => {
+    const user = await createTestUser();
+    const case_ = await createTestCase(user._id);
+    
+    (getServerSession as jest.Mock).mockResolvedValue({
+      user: { id: user._id }
+    });
+
+    const buffer = Buffer.from('test document');
+    const file = {
+      fieldname: 'file',
+      originalname: 'test.pdf',
+      encoding: '7bit',
+      mimetype: 'application/pdf',
+      buffer,
+      size: buffer.length
+    };
+
+    const { req, res } = createMocks({
+      method: 'POST',
+      body: {
+        caseId: case_._id.toString(),
+        type: 'EVIDENCE',
+        title: 'Test Document'
+      }
+    });
+
+    // Attach file to request
+    (req as any).file = file;
+    req.user = { id: user._id.toString() };
+
+    await uploadHandler(req, res);
+    expect(res._getStatusCode()).toBe(201);
+    
+    const data = JSON.parse(res._getData());
+    expect(data.success).toBe(true);
+    expect(data.data.title).toBe('Test Document');
   });
 
   it('should validate file type', async () => {

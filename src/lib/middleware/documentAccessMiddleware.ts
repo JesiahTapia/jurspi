@@ -1,39 +1,39 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Case } from '../models/Case';
-import { Document } from '../models/Document';
+import { Document } from '@/lib/models/Document';
+import { Case } from '@/lib/models/Case';w
 
-export const documentAccessMiddleware = async (
+export const documentAccessMiddleware = (handler: any) => async (
   req: NextApiRequest,
-  res: NextApiResponse,
-  next: () => void
+  res: NextApiResponse
 ) => {
   try {
-    const { documentId } = req.query;
-    const userId = req.user.id;
+    const documentId = req.query.id as string;
+    const userId = req.user?.id;
 
     const document = await Document.findOne({ documentId });
     if (!document) {
-      return res.status(404).json({ error: 'Document not found' });
+      return res.status(404).json({ message: 'Document not found' });
     }
 
-    const case = await Case.findOne({ caseId: document.caseId });
-    if (!case) {
-      return res.status(404).json({ error: 'Case not found' });
+    const case_ = await Case.findById(document.caseId);
+    if (!case_) {
+      return res.status(404).json({ message: 'Case not found' });
     }
 
-    // Check if user has access to the case
-    const hasAccess = 
-      case.claimantId === userId ||
-      case.respondentId === userId ||
-      case.arbitratorId === userId;
+    const hasAccess = [
+      case_.claimant.toString(),
+      case_.respondent?.toString(),
+      ...(case_.arbitrators || []).map(a => a.toString())
+    ].includes(userId);
 
     if (!hasAccess) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ message: 'Access denied' });
     }
 
-    next();
+    req.document = document;
+    return handler(req, res);
   } catch (error) {
-    console.error('Access control error:', error);
-    return res.status(500).json({ error: 'Access control check failed' });
+    console.error('Document access error:', error);
+    return res.status(500).json({ message: 'Access check failed' });
   }
 }; 

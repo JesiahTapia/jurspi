@@ -98,11 +98,14 @@ describe('Ticket #3: Core API Routes', () => {
         body: {
           title: 'Evidence Document',
           type: 'EVIDENCE',
-          fileUrl: 'https://example.com/evidence.pdf'
+          fileUrl: 'https://example.com/evidence.pdf',
+          metadata: {
+            size: 1024,
+            mimeType: 'application/pdf'
+          }
         }
       });
 
-      req.user = { id: user._id };
       await documentHandler(req, res);
       expect(res._getStatusCode()).toBe(201);
     });

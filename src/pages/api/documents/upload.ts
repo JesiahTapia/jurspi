@@ -1,40 +1,52 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]';
-import { generateUploadUrl } from '@/lib/s3';
-import { isValidFileType, MAX_FILE_SIZE, documentMetadataSchema } from '@/lib/documentValidation';
-import { nanoid } from 'nanoid';
+import { authMiddleware } from '@/lib/middleware/authMiddleware';
+import multer from 'multer';
+import { DocumentService } from '@/lib/services/documentService';
+import { handleDocumentError } from '@/lib/utils/errorHandler';
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  try {
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    if (req.method !== 'POST') {
-      return res.status(405).json({ message: 'Method not allowed' });
-    }
-
-    const { mimeType, size } = req.body;
-
-    if (!isValidFileType(mimeType)) {
-      return res.status(400).json({ message: 'Invalid file type' });
-    }
-
-    if (size > MAX_FILE_SIZE) {
-      return res.status(400).json({ message: 'File too large' });
-    }
-
-    const key = `${session.user.id}/${nanoid()}-${Date.now()}`;
-    const uploadUrl = await generateUploadUrl(key, mimeType);
-
-    return res.status(200).json({ uploadUrl, key });
-  } catch (error) {
-    console.error('Upload error:', error);
-    return res.status(500).json({ message: 'Upload preparation failed' });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB
   }
-} 
+});
+
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const file = (req as any).file;
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { caseId, type, title } = req.body;
+    const uploadedBy = req.user.id;
+
+    const document = await DocumentService.createDocument({
+      file,
+      caseId,
+      uploadedBy,
+      type,
+      title
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: document
+    });
+  } catch (error) {
+    const { status, error: errorMessage } = handleDocumentError(error);
+    return res.status(status).json({ error: errorMessage });
+  }
+};
+
+export const config = {
+  api: {
+    bodyParser: false
+  }
+};
+
+export default authMiddleware(upload.single('file')(handler)); 

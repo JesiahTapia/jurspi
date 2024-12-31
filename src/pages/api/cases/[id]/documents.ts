@@ -1,29 +1,69 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { authMiddleware } from '@/lib/middleware/authMiddleware';
+import { Document } from '@/lib/models/Document';
+import { documentMetadataSchema } from '@/lib/utils/documentValidation';
+import { generateUploadUrl } from '@/lib/utils/s3';
+import { nanoid } from 'nanoid';
 import { Case } from '@/lib/models/Case';
-import { handleError } from '@/lib/utils/errorHandler';
-import { caseAccessMiddleware } from '@/lib/middleware/caseAccessMiddleware';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+
   try {
-    if (req.method !== 'POST') {
-      return res.status(405).json({ message: 'Method not allowed' });
+    const validation = documentMetadataSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ errors: validation.error.errors });
     }
 
-    const document = {
-      ...req.body,
-      uploadedBy: req.user?.id || req.session?.user?.id,
-      uploadedAt: new Date()
-    };
+    const { title, type, mimeType, size } = req.body;
+    const caseId = req.query.id as string;
+    const userId = req.user.id;
 
-    req.case.documents = req.case.documents || [];
-    req.case.documents.push(document);
-    await req.case.save();
+    // Verify case access
+    const case_ = await Case.findOne({
+      _id: caseId,
+      $or: [
+        { claimant: userId },
+        { respondent: userId },
+        { arbitrator: userId }
+      ]
+    });
 
-    return res.status(201).json({ success: true, data: req.case });
+    if (!case_) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const documentId = `doc_${nanoid()}`;
+    const key = `cases/${caseId}/${documentId}`;
+    const uploadUrl = await generateUploadUrl(key, mimeType);
+
+    const document = await Document.create({
+      documentId,
+      caseId,
+      title,
+      type,
+      uploadedBy: userId,
+      fileUrl: `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${key}`,
+      fileSize: size,
+      mimeType,
+      metadata: {
+        s3Key: key
+      }
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        document,
+        uploadUrl
+      }
+    });
   } catch (error) {
-    return handleError(error, res);
+    console.error('Document upload error:', error);
+    return res.status(500).json({ message: 'Upload failed' });
   }
 };
 
-export default authMiddleware(caseAccessMiddleware(handler)); 
+export default authMiddleware(handler); 

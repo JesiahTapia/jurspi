@@ -16,4 +16,22 @@ export const handleError = (res: NextApiResponse, error: any) => {
     error: error.message || 'Internal server error',
     timestamp: new Date().toISOString()
   });
+};
+
+export const handleDocumentError = (error: any) => {
+  if (error.message === 'Document not found') {
+    return { status: 404, error: 'Document not found' };
+  }
+  if (error.message === 'File size exceeds limit') {
+    return { status: 400, error: 'File too large' };
+  }
+  if (error.message === 'File type not allowed') {
+    return { status: 400, error: 'Invalid file type' };
+  }
+  if (error.message === 'File failed virus scan') {
+    return { status: 400, error: 'File failed security check' };
+  }
+  
+  console.error('Unhandled document error:', error);
+  return { status: 500, error: 'Internal server error' };
 }; 

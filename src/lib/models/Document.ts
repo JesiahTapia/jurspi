@@ -1,27 +1,49 @@
-import mongoose from 'mongoose';
-import { IDocument } from '../types/interfaces';
+import mongoose, { Schema } from 'mongoose';
 
-const documentSchema = new mongoose.Schema<IDocument>({
+export interface IDocument {
+  documentId: string;
+  caseId: string;
+  title: string;
+  type: 'EVIDENCE' | 'CONTRACT' | 'CLAIM' | 'RESPONSE';
+  fileUrl: string;
+  uploadedBy: string;
+  version: number;
+  fileSize: number;
+  mimeType: string;
+  isActive: boolean;
+  metadata: {
+    originalName: string;
+    s3Key: string;
+  };
+  archived?: boolean;
+  archivedAt?: Date;
+  archivedBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const DocumentSchema = new Schema<IDocument>({
+  documentId: { type: String, required: true, unique: true },
+  caseId: { type: String, required: true },
   title: { type: String, required: true },
   type: { 
     type: String, 
-    enum: ['CLAIM', 'RESPONSE', 'EVIDENCE', 'CONTRACT', 'OTHER'],
-    required: true 
+    required: true,
+    enum: ['EVIDENCE', 'CONTRACT', 'CLAIM', 'RESPONSE']
   },
   fileUrl: { type: String, required: true },
-  uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  uploadedAt: { type: Date, default: Date.now },
-  caseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Case', required: true },
+  uploadedBy: { type: String, required: true },
+  version: { type: Number, default: 1 },
+  fileSize: { type: Number, required: true },
+  mimeType: { type: String, required: true },
+  isActive: { type: Boolean, default: true },
   metadata: {
-    size: Number,
-    mimeType: String,
-    version: { type: Number, default: 1 }
-  }
+    originalName: String,
+    s3Key: String
+  },
+  archived: { type: Boolean, default: false },
+  archivedAt: Date,
+  archivedBy: String
 }, { timestamps: true });
 
-documentSchema.index({ caseId: 1, type: 1 });
-documentSchema.index({ uploadedAt: -1 });
-documentSchema.index({ uploadedBy: 1 });
-documentSchema.index({ 'metadata.version': 1 });
-
-export default mongoose.models.Document || mongoose.model<IDocument>('Document', documentSchema); 
+export const Document = mongoose.models.Document || mongoose.model<IDocument>('Document', DocumentSchema); 
