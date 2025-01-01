@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Case } from '@/lib/models/Case';
+import Case from '@/lib/models/Case';
 import { DocumentService } from '@/lib/services/documentService';
 
 export default async function documentHandler(
@@ -25,7 +25,26 @@ export default async function documentHandler(
       return res.status(403).json({ success: false, error: 'Unauthorized access to case' });
     }
 
-    // Existing validation and document handling logic...
+    if (req.method === 'POST') {
+      const { title, type } = req.body;
+      const file = req.file;
+
+      if (!file) {
+        return res.status(400).json({ success: false, error: 'No file provided' });
+      }
+
+      const document = await DocumentService.createDocument({
+        file,
+        caseId: case_._id.toString(),
+        uploadedBy: session.user.id,
+        type,
+        title
+      });
+
+      return res.status(201).json({ success: true, data: document });
+    }
+
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
     
   } catch (error) {
     console.error('Document handler error:', error);
