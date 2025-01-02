@@ -2,35 +2,13 @@ import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import Case from '../lib/models/Case';
 import Arbitrator from '../lib/models/Arbitrator';
-import { createTestUser } from './api/setup';
+import { setupTestDB, closeTestDB, clearTestDB, createTestUser } from './shared/testSetup';
 
-let mongoServer: MongoMemoryServer;
+describe('Schema Design', () => {
+  beforeAll(async () => await setupTestDB());
+  afterAll(async () => await closeTestDB());
+  beforeEach(async () => await clearTestDB());
 
-beforeAll(async () => {
-  if (mongoose.connection.readyState !== 0) {
-    await mongoose.disconnect();
-  }
-  mongoServer = await MongoMemoryServer.create();
-  await mongoose.connect(mongoServer.getUri());
-});
-
-afterAll(async () => {
-  if (mongoose.connection.readyState !== 0) {
-    await mongoose.disconnect();
-  }
-  if (mongoServer) {
-    await mongoServer.stop();
-  }
-});
-
-beforeEach(async () => {
-  const collections = mongoose.connection.collections;
-  for (const key in collections) {
-    await collections[key].deleteMany({});
-  }
-});
-
-describe('Schema Design Tests', () => {
   // Test Case Schema
   describe('Case Schema', () => {
     it('should create a case with all required fields', async () => {
@@ -38,18 +16,7 @@ describe('Schema Design Tests', () => {
       const caseData = {
         caseNumber: 'ARB-2024-001',
         status: 'FILED',
-        claimant: {
-          type: 'CLAIMANT',
-          name: 'John Doe',
-          email: 'john@example.com',
-          address: {
-            street: '123 Main St',
-            city: 'New York',
-            state: 'NY',
-            zipCode: '10001',
-            country: 'USA'
-          }
-        },
+        claimant: user._id,
         dispute: {
           description: 'Contract breach',
           amount: 50000,
@@ -70,6 +37,8 @@ describe('Schema Design Tests', () => {
 
       const savedCase = await Case.create(caseData);
       expect(savedCase.caseNumber).toBe('ARB-2024-001');
+      expect(savedCase.status).toBe('FILED');
+      expect(savedCase.claimant.toString()).toBe(user._id.toString());
     });
   });
 
