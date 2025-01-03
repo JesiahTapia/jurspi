@@ -1,49 +1,39 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { caseAccessMiddleware } from '@/lib/middleware/caseAccessMiddleware';
-import Case from '@/lib/models/Case';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
+import { Case } from '@/models/Case';
+import { connectToDatabase } from '@/lib/db';
+import { errorHandler } from '@/middleware/errorHandler';
 
-const VALID_STATUSES = [
-  'FILED',
-  'PENDING_INITIAL_EVALUATION',
-  'EVALUATION',
-  'RESPONSE_PENDING',
-  'IN_PROGRESS',
-  'CONCLUDED',
-  'DISMISSED'
-];
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  switch (req.method) {
-    case 'GET':
-      return res.status(200).json({ success: true, data: req.case });
-      
-    case 'PATCH':
-      const { status } = req.body;
-      
-      if (!status || !VALID_STATUSES.includes(status)) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Invalid status' 
-        });
+    await connectToDatabase();
+    const { id } = req.query;
+
+    if (req.method === 'GET') {
+      const case_ = await Case.findById(id);
+      if (!case_) {
+        return res.status(404).json({ message: 'Case not found' });
       }
+      return res.status(200).json({ success: true, data: case_ });
+    }
 
-      const updatedCase = await Case.findByIdAndUpdate(
-        req.case._id,
-        { status },
-        { new: true }
+    if (req.method === 'PATCH') {
+      const case_ = await Case.findByIdAndUpdate(
+        id,
+        { ...req.body },
+        { new: true, runValidators: true }
       );
+      return res.status(200).json({ success: true, data: case_ });
+    }
 
-      return res.status(200).json({ 
-        success: true, 
-        data: updatedCase 
-      });
-
-    default:
-      return res.status(405).json({ 
-        success: false, 
-        message: 'Method not allowed' 
-      });
+    return res.status(405).json({ message: 'Method not allowed' });
+  } catch (error) {
+    return errorHandler(error, req, res);
   }
-};
-
-export default caseAccessMiddleware(handler); 
+} 

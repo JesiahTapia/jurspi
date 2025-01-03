@@ -5,23 +5,39 @@ import User from '@/lib/models/User';
 import Case from '@/lib/models/Case';
 import { S3Client } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
+import { Types } from 'mongoose';
 
 export const s3Mock = mockClient(S3Client);
 
 let counter = 0;
+let mongod: MongoMemoryServer;
 
 export const setupTestDB = async () => {
-  const mongod = await MongoMemoryServer.create();
-  await mongoose.connect(mongod.getUri());
+  if (!mongod) {
+    mongod = await MongoMemoryServer.create();
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(mongod.getUri());
+    }
+  }
   return mongod;
 };
 
 export const closeTestDB = async () => {
-  await mongoose.disconnect();
+  if (mongod) {
+    await mongoose.connection.dropDatabase();
+    await mongoose.connection.close();
+    await mongod.stop();
+    mongod = null;
+  }
 };
 
 export const clearTestDB = async () => {
-  await mongoose.connection.dropDatabase();
+  if (mongoose.connection.readyState !== 0) {
+    const collections = mongoose.connection.collections;
+    for (const key in collections) {
+      await collections[key].deleteMany();
+    }
+  }
 };
 
 export const createTestUser = async () => {
@@ -34,9 +50,40 @@ export const createTestUser = async () => {
   });
 };
 
-export const createTestCase = async (userId: string) => {
+export const createTestCase = async (userId: Types.ObjectId) => {
   return await Case.create({
-    claimant: userId,
-    status: 'FILED'
+    caseNumber: `ARB-${Date.now()}`,
+    status: 'FILED',
+    filingDate: new Date(),
+    claimant: {
+      type: 'CLAIMANT',
+      name: 'Test User',
+      email: 'test@example.com',
+      address: {
+        street: '123 Test St',
+        city: 'Test City',
+        state: 'TS',
+        zipCode: '12345',
+        country: 'Test Country'
+      }
+    },
+    dispute: {
+      description: 'Test dispute',
+      amount: 1000,
+      category: 'CONTRACT'
+    },
+    contract: {
+      title: 'Test Contract',
+      fileUrl: 'https://example.com/contract.pdf',
+      clauses: [{ number: 1, text: 'Test clause' }]
+    },
+    claimDetails: {
+      description: 'Test claim',
+      amount: 1000,
+      breachedClauses: [1],
+      supportingEvidence: []
+    },
+    claimantId: userId,
+    respondentAnswer: { counterClaims: [] }
   });
 }; 

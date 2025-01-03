@@ -1,53 +1,45 @@
-import { getServerSession } from 'next-auth';
 import { NextApiRequest, NextApiResponse } from 'next';
-import Case from '@/lib/models/Case';
-import { DocumentService } from '@/lib/services/documentService';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../../auth/[...nextauth]';
+import { Case } from '@/models/Case';
+import { connectToDatabase } from '@/lib/db';
+import { errorHandler } from '@/middleware/errorHandler';
 
-export default async function documentHandler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const session = await getServerSession(req);
-    if (!session?.user?.id) {
-      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const caseId = req.query.id as string;
-    const case_ = await Case.findById(caseId);
-    
-    if (!case_) {
-      return res.status(404).json({ success: false, error: 'Case not found' });
-    }
-
-    // Check if user has access to the case
-    if (case_.claimant.toString() !== session.user.id) {
-      return res.status(403).json({ success: false, error: 'Unauthorized access to case' });
-    }
+    await connectToDatabase();
+    const { id } = req.query;
 
     if (req.method === 'POST') {
-      const { title, type } = req.body;
-      const file = req.file;
-
-      if (!file) {
-        return res.status(400).json({ success: false, error: 'No file provided' });
+      const case_ = await Case.findById(id);
+      if (!case_) {
+        return res.status(404).json({ message: 'Case not found' });
       }
 
-      const document = await DocumentService.createDocument({
-        file,
-        caseId: case_._id.toString(),
+      // Verify user has access to this case
+      if (case_.claimant.userId.toString() !== session.user.id) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+
+      const document = {
+        ...req.body,
         uploadedBy: session.user.id,
-        type,
-        title
-      });
+        uploadedAt: new Date()
+      };
+
+      case_.documents.push(document);
+      await case_.save();
 
       return res.status(201).json({ success: true, data: document });
     }
 
-    return res.status(405).json({ success: false, error: 'Method not allowed' });
-    
+    return res.status(405).json({ message: 'Method not allowed' });
   } catch (error) {
-    console.error('Document handler error:', error);
-    return res.status(500).json({ success: false, error: 'Internal server error' });
+    return errorHandler(error, req, res);
   }
 } 
