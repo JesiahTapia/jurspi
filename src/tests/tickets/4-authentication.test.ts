@@ -1,5 +1,5 @@
 import { createMocks } from 'node-mocks-http';
-import { setupTestDB, closeTestDB, clearTestDB } from '@/tests/api/setup';
+import { setupTestDB, closeTestDB, clearTestDB } from '../shared/setup';
 import registerHandler from '@/pages/api/auth/register';
 import loginHandler from '@/pages/api/auth/login';
 import resetPasswordHandler from '@/pages/api/auth/reset-password';
