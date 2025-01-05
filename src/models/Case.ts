@@ -38,7 +38,16 @@ const ClaimDetailsSchema = new Schema({
 });
 
 const CaseSchema = new Schema({
-  caseNumber: { type: String, required: true },
+  userId: { 
+    type: Schema.Types.ObjectId, 
+    ref: 'User',
+    required: true 
+  },
+  caseNumber: { 
+    type: String, 
+    required: true,
+    unique: true 
+  },
   status: {
     type: String,
     required: true,

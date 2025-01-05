@@ -89,30 +89,38 @@ describe('Ticket #3: Core API Routes', () => {
   describe('POST /api/cases/[id]/documents', () => {
     it('should upload document to case', async () => {
       const user = await createTestUser();
+      console.log('Created Test User:', user);
+      
       const case_ = await createTestCase(user._id);
+      console.log('Created Test Case:', case_);
       
       (getServerSession as jest.Mock).mockResolvedValue({
         user: { id: user._id, email: user.email }
       });
 
+      const file = {
+        originalname: 'test.pdf',
+        buffer: Buffer.from('test document'),
+        mimetype: 'application/pdf',
+        size: 1024
+      } as Express.Multer.File;
+
       const { req, res } = createMocks({
         method: 'POST',
         query: { id: case_._id.toString() },
-        headers: {
-          'content-type': 'application/json'
-        },
+        file,
         body: {
           title: 'Evidence Document',
-          type: 'EVIDENCE',
-          fileUrl: 'https://example.com/evidence.pdf',
-          metadata: {
-            size: 1024,
-            mimeType: 'application/pdf'
-          }
+          type: 'EVIDENCE'
         }
       });
 
+      (req as any).file = file;
+
       await documentHandler(req, res);
+      console.log('Response Status:', res._getStatusCode());
+      console.log('Response Data:', res._getData());
+      
       expect(res._getStatusCode()).toBe(201);
       
       const updatedCase = await Case.findById(case_._id);

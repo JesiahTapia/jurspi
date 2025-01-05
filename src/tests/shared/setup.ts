@@ -50,8 +50,9 @@ export const createTestUser = async () => {
   });
 };
 
-export const createTestCase = async (userId: Types.ObjectId) => {
-  return await Case.create({
+export async function createTestCase(userId: string) {
+  const case_ = new Case({
+    userId,
     caseNumber: `ARB-${Date.now()}`,
     status: 'FILED',
     filingDate: new Date(),
@@ -83,7 +84,7 @@ export const createTestCase = async (userId: Types.ObjectId) => {
       breachedClauses: [1],
       supportingEvidence: []
     },
-    claimantId: userId,
     respondentAnswer: { counterClaims: [] }
   });
-}; 
+  return await case_.save();
+} 
