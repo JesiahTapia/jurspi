@@ -3,12 +3,13 @@ import { getServerSession } from 'next-auth/next';
 import { DocumentService } from '@/lib/services/documentService';
 import { Case } from '@/models/Case';
 import multer from 'multer';
+import { runMiddleware } from '@/lib/middleware/runMiddleware';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 export const config = {
   api: {
-    bodyParser: true // Enable body parser for URL-based uploads
+    bodyParser: false // Disable body parser to let multer handle the form data
   }
 };
 
@@ -17,6 +18,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method !== 'POST') {
       return res.status(405).json({ success: false, message: 'Method not allowed' });
     }
+
+    // Apply multer middleware
+    await runMiddleware(req, res, upload.single('file'));
 
     const session = await getServerSession(req);
     if (!session?.user?.id) {

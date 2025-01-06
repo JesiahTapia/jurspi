@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import Case from '@/lib/models/Case';
+import Case from '@/models/Case';
 import { setupTestDB, closeTestDB, clearTestDB, createTestUser } from '@/tests/api/setup';
 
 describe('Case Model', () => {

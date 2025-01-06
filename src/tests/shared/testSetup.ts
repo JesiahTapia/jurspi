@@ -4,7 +4,7 @@ import { hash } from 'bcryptjs';
 import { S3Client } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
 import User from '@/lib/models/User';
-import Case from '@/lib/models/Case';
+import { Case } from '@/models/Case';
 
 export const s3Mock = mockClient(S3Client);
 let mongod: MongoMemoryServer;
@@ -44,11 +44,24 @@ export const createTestUser = async () => {
   });
 };
 
-export const createTestCase = async (userId: string) => {
-  return await Case.create({
+export async function createTestCase(userId: string) {
+  const case_ = await Case.create({
+    userId,
     caseNumber: `ARB-${Date.now()}`,
     status: 'FILED',
-    claimant: userId,
+    filingDate: new Date(),
+    claimant: {
+      type: 'CLAIMANT',
+      name: 'Test User',
+      email: 'test@example.com',
+      address: {
+        street: '123 Test St',
+        city: 'Test City',
+        state: 'TS',
+        zipCode: '12345',
+        country: 'Test Country'
+      }
+    },
     dispute: {
       description: 'Test dispute',
       amount: 1000,
@@ -75,7 +88,8 @@ export const createTestCase = async (userId: string) => {
     documents: [],
     timeline: []
   });
-};
+  return case_;
+}
 
 export const createTestDocument = async (userId: string) => {
   return {

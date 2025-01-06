@@ -51,7 +51,7 @@ export const createTestUser = async () => {
 };
 
 export async function createTestCase(userId: string) {
-  const case_ = new Case({
+  const case_ = await Case.create({
     userId,
     caseNumber: `ARB-${Date.now()}`,
     status: 'FILED',
@@ -84,7 +84,10 @@ export async function createTestCase(userId: string) {
       breachedClauses: [1],
       supportingEvidence: []
     },
-    respondentAnswer: { counterClaims: [] }
+    respondentAnswer: { counterClaims: [] },
+    arbitrators: [],
+    documents: [],
+    timeline: []
   });
-  return await case_.save();
+  return case_;
 } 

@@ -76,6 +76,11 @@ const evaluationSchema = new mongoose.Schema({
 });
 
 const caseSchema = new mongoose.Schema<ICase>({
+  userId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User',
+    required: true 
+  },
   caseNumber: { type: String, required: true, unique: true },
   status: {
     type: String,
@@ -131,6 +136,11 @@ caseSchema.index({ 'respondent.email': 1 });
 caseSchema.index({ status: 1 });
 caseSchema.index({ arbitrationRank: -1 });
 caseSchema.index({ status: 1, filingDate: -1 });
+caseSchema.index({ 'claimant.email': 1, 'respondent.email': 1 });
+caseSchema.index({ arbitrationRank: -1, status: 1 });
+caseSchema.index({ 'dispute.category': 1, status: 1 });
+
+export default mongoose.models.Case || mongoose.model<ICase>('Case', caseSchema); 
 caseSchema.index({ 'claimant.email': 1, 'respondent.email': 1 });
 caseSchema.index({ arbitrationRank: -1, status: 1 });
 caseSchema.index({ 'dispute.category': 1, status: 1 });

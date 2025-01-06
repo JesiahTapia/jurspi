@@ -20,10 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const validatedData = await createCaseSchema.parseAsync(req.body);
         const newCase = await Case.create({
           ...validatedData,
-          claimant: {
-            ...validatedData.claimant,
-            userId: session.user.id
-          }
+          userId: session.user.id,
+          claimant: validatedData.claimant
         });
         return res.status(201).json({ success: true, data: newCase });
       } catch (error) {

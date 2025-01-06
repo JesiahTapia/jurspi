@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import Document from '@/lib/models/Document';
 import { setupTestDB, closeTestDB, clearTestDB, createTestUser, createTestCase } from '@/tests/api/setup';
+import { Case } from '@/models/Case';
 
 describe('Document Model', () => {
   beforeAll(async () => {

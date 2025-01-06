@@ -59,4 +59,5 @@ const CaseSchema = new Schema({
   claimDetails: { type: ClaimDetailsSchema, required: true }
 }, { timestamps: true });
 
+// Check if model exists before creating
 export const Case = mongoose.models.Case || mongoose.model('Case', CaseSchema); 
