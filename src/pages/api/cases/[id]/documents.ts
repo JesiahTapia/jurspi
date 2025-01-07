@@ -4,6 +4,7 @@ import { DocumentService } from '@/lib/services/documentService';
 import { Case } from '@/models/Case';
 import multer from 'multer';
 import { runMiddleware } from '@/lib/middleware/runMiddleware';
+import { authOptions } from '../../auth/[...nextauth]';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -22,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Apply multer middleware
     await runMiddleware(req, res, upload.single('file'));
 
-    const session = await getServerSession(req);
+    const session = await getServerSession(req, res, authOptions);
     if (!session?.user?.id) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
@@ -43,7 +44,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ success: false, message: 'Case is missing userId' });
     }
 
-    if (case_.userId.toString() !== session.user.id) {
+    // Convert both IDs to strings before comparison
+    const sessionUserId = session.user.id.toString();
+    const caseUserId = case_.userId.toString();
+
+    console.log('Session User ID (string):', sessionUserId);
+    console.log('Case User ID (string):', caseUserId);
+    console.log('Are IDs equal?:', sessionUserId === caseUserId);
+
+    if (sessionUserId !== caseUserId) {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 
