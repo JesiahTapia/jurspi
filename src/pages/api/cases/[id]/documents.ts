@@ -71,6 +71,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       title
     });
 
+    // Update the case with the new document
+    await Case.findByIdAndUpdate(
+      caseId,
+      { $push: { documents: doc._id } },
+      { new: true }
+    );
+
     return res.status(201).json({
       success: true,
       data: doc
