@@ -14,6 +14,7 @@ describe('Schema Design', () => {
     it('should create a case with all required fields', async () => {
       const user = await createTestUser();
       const caseData = {
+        userId: user._id,
         caseNumber: 'ARB-2024-001',
         status: 'FILED',
         claimant: user._id,

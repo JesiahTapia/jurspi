@@ -1,6 +1,6 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose from 'mongoose';
 
-const AddressSchema = new Schema({
+const AddressSchema = new mongoose.Schema({
   street: { type: String, required: true },
   city: { type: String, required: true },
   state: { type: String, required: true },
@@ -8,20 +8,20 @@ const AddressSchema = new Schema({
   country: { type: String, required: true }
 });
 
-const PartySchema = new Schema({
+const PartySchema = new mongoose.Schema({
   type: { type: String, required: true, enum: ['CLAIMANT', 'RESPONDENT'] },
   name: { type: String, required: true },
   email: { type: String, required: true },
   address: { type: AddressSchema, required: true }
 });
 
-const DisputeSchema = new Schema({
+const DisputeSchema = new mongoose.Schema({
   description: { type: String, required: true },
   amount: { type: Number, required: true },
   category: { type: String, required: true, enum: ['CONTRACT', 'TORT', 'COMMERCIAL'] }
 });
 
-const ContractSchema = new Schema({
+const ContractSchema = new mongoose.Schema({
   title: { type: String, required: true },
   fileUrl: { type: String, required: true },
   clauses: [{
@@ -30,34 +30,65 @@ const ContractSchema = new Schema({
   }]
 });
 
-const ClaimDetailsSchema = new Schema({
+const ClaimDetailsSchema = new mongoose.Schema({
   description: { type: String, required: true },
   amount: { type: Number, required: true },
   breachedClauses: [{ type: Number }],
   supportingEvidence: [{ type: String }]
 });
 
-const CaseSchema = new Schema({
-  userId: { 
-    type: Schema.Types.ObjectId, 
+const caseSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true 
+    required: true
   },
-  caseNumber: { 
-    type: String, 
+  caseNumber: {
+    type: String,
     required: true,
-    unique: true 
+    unique: true
   },
   status: {
     type: String,
     required: true,
-    enum: ['FILED', 'PENDING_INITIAL_EVALUATION', 'EVALUATION', 'RESPONSE_PENDING', 'IN_PROGRESS', 'CONCLUDED', 'DISMISSED']
+    enum: ['FILED', 'EVALUATION', 'ARBITRATION', 'CLOSED']
   },
-  claimant: { type: PartySchema, required: true },
-  dispute: { type: DisputeSchema, required: true },
-  contract: { type: ContractSchema, required: true },
-  claimDetails: { type: ClaimDetailsSchema, required: true }
-}, { timestamps: true });
+  claimant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  dispute: {
+    description: String,
+    amount: Number,
+    category: {
+      type: String,
+      required: true
+    }
+  },
+  contract: {
+    title: String,
+    fileUrl: String,
+    clauses: [{
+      number: Number,
+      text: String
+    }]
+  },
+  claimDetails: {
+    description: String,
+    amount: Number,
+    breachedClauses: [Number],
+    supportingEvidence: [String]
+  }
+}, {
+  timestamps: true
+});
 
-// Check if model exists before creating
-export const Case = mongoose.models.Case || mongoose.model('Case', CaseSchema); 
+// Single index declarations instead of duplicates
+caseSchema.index({ caseNumber: 1 });
+caseSchema.index({ "claimant.email": 1, "respondent.email": 1 });
+caseSchema.index({ arbitrationRank: -1, status: 1 });
+caseSchema.index({ "dispute.category": 1, status: 1 });
+
+export const Case = mongoose.models.Case || mongoose.model('Case', caseSchema);
+export default Case; 

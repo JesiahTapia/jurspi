@@ -49,44 +49,23 @@ export async function createTestCase(userId: string) {
     userId,
     caseNumber: `ARB-${Date.now()}`,
     status: 'FILED',
-    filingDate: new Date(),
-    claimant: {
-      type: 'CLAIMANT',
-      name: 'Test User',
-      email: 'test@example.com',
-      address: {
-        street: '123 Test St',
-        city: 'Test City',
-        state: 'TS',
-        zipCode: '12345',
-        country: 'Test Country'
-      }
-    },
+    claimant: userId,
     dispute: {
-      description: 'Test dispute',
-      amount: 1000,
+      description: 'Contract breach',
+      amount: 50000,
       category: 'CONTRACT'
     },
     contract: {
-      title: 'Test Contract',
+      title: 'Service Agreement',
       fileUrl: 'https://example.com/contract.pdf',
-      clauses: [{ 
-        number: 1, 
-        text: 'Test clause' 
-      }]
+      clauses: [{ number: 1, text: 'Service terms' }]
     },
     claimDetails: {
-      description: 'Test claim',
-      amount: 1000,
+      description: 'Failed to deliver services',
+      amount: 50000,
       breachedClauses: [1],
       supportingEvidence: []
-    },
-    respondentAnswer: {
-      counterClaims: []
-    },
-    arbitrators: [],
-    documents: [],
-    timeline: []
+    }
   });
   return case_;
 }
