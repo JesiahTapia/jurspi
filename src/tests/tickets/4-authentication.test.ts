@@ -7,10 +7,10 @@ import { getServerSession } from 'next-auth/next';
 import User from '@/lib/models/User';
 import { UserRole } from '@/lib/types/enums';
 import { withRole } from '@/lib/middleware/roleMiddleware';
-import { sendEmail } from '@/lib/email';
+import { sendEmail } from '@/lib/services/emailService';
 
 jest.mock('next-auth/next');
-jest.mock('@/lib/email', () => ({
+jest.mock('@/lib/services/emailService', () => ({
   sendEmail: jest.fn().mockResolvedValue({ messageId: 'test-id' })
 }));
 

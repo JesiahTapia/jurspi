@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '@/lib/db';
 import User from '@/lib/models/User';
 import crypto from 'crypto';
-import { sendEmail } from '@/lib/email';
+import { sendEmail } from '@/lib/services/emailService';
 
 export default async function handler(
   req: NextApiRequest,
