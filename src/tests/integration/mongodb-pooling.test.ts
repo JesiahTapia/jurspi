@@ -1,4 +1,4 @@
-import { connectToDatabase } from '@/lib/mongodb';
+import { connectToDatabase } from '@/lib/db';
 import { setupTestDB, closeTestDB, clearTestDB } from '@/tests/api/setup';
 
 describe('MongoDB Connection Pooling', () => {

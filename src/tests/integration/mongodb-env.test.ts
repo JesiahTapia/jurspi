@@ -1,4 +1,4 @@
-import { connectToDatabase } from '@/lib/mongodb';
+import { connectToDatabase } from '@/lib/db';
 import mongoose from 'mongoose';
 
 describe('MongoDB Environment Setup', () => {

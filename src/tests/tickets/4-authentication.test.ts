@@ -8,6 +8,9 @@ import User from '@/lib/models/User';
 import { UserRole } from '@/lib/types/enums';
 import { withRole } from '@/lib/middleware/roleMiddleware';
 import { sendEmail } from '@/lib/services/emailService';
+import { setupMongoDb, teardownMongoDb, clearMongoDb } from '../utils/testUtils';
+import { Case } from '@/models/Case';
+import mongoose from 'mongoose';
 
 jest.mock('next-auth/next');
 jest.mock('@/lib/services/emailService', () => ({

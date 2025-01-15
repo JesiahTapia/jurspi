@@ -1,25 +1,27 @@
 import { createMocks } from 'node-mocks-http';
 import { 
-  setupTestDB, 
-  closeTestDB, 
-  clearTestDB,
+  setupMongoDb, 
+  teardownMongoDb, 
+  clearMongoDb,
   createTestUser, 
   createTestCase,
   s3Mock 
-} from '../shared/testSetup';
+} from '../utils/testUtils';
 import { DocumentService } from '@/lib/services/documentService';
 import { VirusScanService } from '@/lib/services/virusScanService';
 import documentHandler from '@/pages/api/cases/[id]/documents';
 import { getServerSession } from 'next-auth';
+import { Case } from '@/models/Case';
+import mongoose from 'mongoose';
 
 jest.mock('next-auth/next');
 jest.mock('@/lib/services/virusScanService');
 
 describe('Ticket #5: Document Upload and Management System', () => {
-  beforeAll(async () => await setupTestDB());
-  afterAll(async () => await closeTestDB());
+  beforeAll(async () => await setupMongoDb());
+  afterAll(async () => await teardownMongoDb());
   beforeEach(async () => {
-    await clearTestDB();
+    await clearMongoDb();
     jest.clearAllMocks();
     s3Mock.reset();
     (VirusScanService.scanBuffer as jest.Mock).mockResolvedValue(true);

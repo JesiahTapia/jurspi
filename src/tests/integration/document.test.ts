@@ -1,16 +1,16 @@
 import mongoose from 'mongoose';
 import { VirusScanService } from '@/lib/services/virusScanService';
 import { DocumentService } from '@/lib/services/documentService';
-import { setupTestDB, closeTestDB, clearTestDB, createTestUser, createTestCase } from '../api/setup';
+import { setupMongoDb, teardownMongoDb, clearMongoDb, createTestUser, createTestCase } from '@/tests/utils/testUtils';
 import { Document } from '@/lib/models/Document';
-import { s3Mock } from '../document-handling/setup';
+import { s3Mock } from '@/tests/utils/testUtils';
 
 describe('Document Service Integration Tests', () => {
-  beforeAll(async () => await setupTestDB());
-  afterAll(async () => await closeTestDB());
+  beforeAll(async () => await setupMongoDb());
+  afterAll(async () => await teardownMongoDb());
   
   beforeEach(async () => {
-    await clearTestDB();
+    await clearMongoDb();
     s3Mock.reset();
   });
 

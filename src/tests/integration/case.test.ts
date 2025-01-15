@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import Case from '@/models/Case';
-import { setupTestDB, closeTestDB, clearTestDB, createTestUser } from '@/tests/api/setup';
+import { setupTestDB, closeTestDB, clearTestDB, createTestUser } from '../shared/setup';
 
 describe('Case Model', () => {
   beforeAll(async () => await setupTestDB());

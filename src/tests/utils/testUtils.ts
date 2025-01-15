@@ -7,45 +7,46 @@ import User from '@/lib/models/User';
 import { Case } from '@/models/Case';
 
 export const s3Mock = mockClient(S3Client);
-let mongod: MongoMemoryServer;
-let counter = 0;
 
-export const setupTestDB = async () => {
+let mongoServer: MongoMemoryServer;
+
+export async function setupMongoDb() {
   if (mongoose.connection.readyState !== 0) {
     await mongoose.disconnect();
   }
-  mongod = await MongoMemoryServer.create();
-  await mongoose.connect(mongod.getUri());
-};
+  
+  mongoServer = await MongoMemoryServer.create();
+  const mongoUri = mongoServer.getUri();
+  await mongoose.connect(mongoUri);
+}
 
-export const closeTestDB = async () => {
+export async function teardownMongoDb() {
   if (mongoose.connection.readyState !== 0) {
     await mongoose.disconnect();
   }
-  if (mongod) {
-    await mongod.stop();
+  if (mongoServer) {
+    await mongoServer.stop();
   }
-};
+}
 
-export const clearTestDB = async () => {
+export async function clearMongoDb() {
   const collections = mongoose.connection.collections;
   for (const key in collections) {
     await collections[key].deleteMany({});
   }
-};
+}
 
-export const createTestUser = async () => {
-  const password = await hash('password123', 10);
-  counter++;
-  return await User.create({
-    email: `test${counter}@example.com`,
-    password,
-    role: 'USER'
+export async function createTestUser() {
+  const hashedPassword = await hash('password123', 10);
+  return User.create({
+    email: `test${Date.now()}@example.com`,
+    password: hashedPassword,
+    name: 'Test User'
   });
-};
+}
 
 export async function createTestCase(userId: string) {
-  const case_ = await Case.create({
+  return Case.create({
     userId,
     caseNumber: `ARB-${Date.now()}`,
     status: 'FILED',
@@ -67,15 +68,4 @@ export async function createTestCase(userId: string) {
       supportingEvidence: []
     }
   });
-  return case_;
-}
-
-export const createTestDocument = async (userId: string) => {
-  return {
-    originalName: 'test.pdf',
-    size: 1024,
-    mimeType: 'application/pdf',
-    key: `${userId}/test.pdf`,
-    version: 1
-  };
-}; 
+} 

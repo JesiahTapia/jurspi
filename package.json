@@ -10,7 +10,12 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:mongodb-setup": "jest --runInBand --detectOpenHandles src/tests/integration/mongodb-env.test.ts src/tests/integration/setup.test.ts src/tests/integration/mongodb.test.ts src/tests/api/health/database.test.ts"
+    "test:mongodb-setup": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.mjs src/tests/tickets/1-mongodb-setup.test.ts --runInBand --detectOpenHandles",
+    "test:ticket1": "jest --config jest.config.mjs src/tests/tickets/1-mongodb-setup.test.ts --runInBand",
+    "test:ticket2": "jest --config jest.config.mjs src/tests/tickets/2-schema-design.test.ts --runInBand",
+    "test:ticket3": "jest --config jest.config.mjs src/tests/tickets/3-api-routes.test.ts --runInBand",
+    "test:ticket4": "jest --config jest.config.mjs src/tests/tickets/4-authentication.test.ts --runInBand",
+    "test:ticket5": "jest --config jest.config.mjs src/tests/tickets/5-document-handling.test.ts --runInBand"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.726.1",
@@ -31,6 +36,8 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@shelf/jest-mongodb": "^4.3.2",
+    "@swc/jest": "^0.2.37",
     "@testing-library/jest-dom": "^6.6.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.14",

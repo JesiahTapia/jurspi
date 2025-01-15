@@ -5,6 +5,8 @@ import caseDetailHandler from '@/pages/api/cases/[id]';
 import documentHandler from '@/pages/api/cases/[id]/documents';
 import { createTestUser, createTestCase, setupTestDB, closeTestDB, clearTestDB } from '../shared/setup';
 import { Case } from '@/models/Case';
+import { setupMongoDb, teardownMongoDb, clearMongoDb } from '../utils/testUtils';
+import mongoose from 'mongoose';
 
 jest.mock('next-auth/next');
 
