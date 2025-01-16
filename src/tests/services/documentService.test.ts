@@ -1,16 +1,15 @@
 import { DocumentService } from '@/lib/services/documentService';
-import { setupTestDB, closeTestDB, clearTestDB, createTestUser, createTestCase } from '../api/setup';
-import { s3Mock } from '../document-handling/setup';
+import { setupMongoDb, teardownMongoDb, clearMongoDb, createTestUser, createTestCase, s3Mock } from '@/tests/utils/testUtils';
 import { VirusScanService } from '@/lib/services/virusScanService';
 
 jest.mock('@/lib/services/virusScanService');
 
 describe('Document Service', () => {
-  beforeAll(async () => await setupTestDB());
-  afterAll(async () => await closeTestDB());
+  beforeAll(async () => await setupMongoDb());
+  afterAll(async () => await teardownMongoDb());
   
   beforeEach(async () => {
-    await clearTestDB();
+    await clearMongoDb();
     s3Mock.reset();
     jest.clearAllMocks();
     (VirusScanService.scanBuffer as jest.Mock).mockResolvedValue(true);

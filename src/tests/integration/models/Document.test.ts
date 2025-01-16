@@ -1,19 +1,19 @@
 import mongoose from 'mongoose';
-import Document from '@/lib/models/Document';
-import { setupTestDB, closeTestDB, clearTestDB, createTestUser, createTestCase } from '@/tests/api/setup';
+import { Document } from '@/lib/models/Document';
+import { setupMongoDb, teardownMongoDb, clearMongoDb, createTestUser, createTestCase } from '@/tests/utils/testUtils';
 import { Case } from '@/models/Case';
 
 describe('Document Model', () => {
   beforeAll(async () => {
-    await setupTestDB();
+    await setupMongoDb();
   });
 
   afterAll(async () => {
-    await closeTestDB();
+    await teardownMongoDb();
   });
 
   beforeEach(async () => {
-    await clearTestDB();
+    await clearMongoDb();
   });
 
   it('should create a document with valid data', async () => {

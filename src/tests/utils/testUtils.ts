@@ -5,6 +5,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
 import User from '@/lib/models/User';
 import { Case } from '@/models/Case';
+import { Document } from '@/lib/models/Document';
 
 export const s3Mock = mockClient(S3Client);
 
@@ -66,6 +67,21 @@ export async function createTestCase(userId: string) {
       amount: 50000,
       breachedClauses: [1],
       supportingEvidence: []
+    }
+  });
+}
+
+export async function createTestDocument(caseId: string, userId: string) {
+  return Document.create({
+    title: 'Test Document',
+    type: 'EVIDENCE',
+    fileUrl: 'https://example.com/test.pdf',
+    uploadedBy: userId,
+    caseId: caseId,
+    documentId: new mongoose.Types.ObjectId().toString(),
+    metadata: {
+      size: 1024,
+      mimeType: 'application/pdf'
     }
   });
 } 

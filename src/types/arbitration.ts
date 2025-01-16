@@ -67,4 +67,4 @@ export interface ICase {
   };
   documents: IDocument[];
   timeline: ITimelineEvent[];
-} w
+} 

@@ -1,17 +1,17 @@
 import { connectToDatabase } from '@/lib/db';
-import { setupTestDB, closeTestDB, clearTestDB } from '@/tests/api/setup';
+import { setupMongoDb, teardownMongoDb, clearMongoDb } from '@/tests/utils/testUtils';
 
 describe('MongoDB Connection Pooling', () => {
   beforeAll(async () => {
-    await setupTestDB();
+    await setupMongoDb();
   });
 
   afterAll(async () => {
-    await closeTestDB();
+    await teardownMongoDb();
   });
 
   beforeEach(async () => {
-    await clearTestDB();
+    await clearMongoDb();
   });
 
   it('should reuse existing connections', async () => {
@@ -33,7 +33,7 @@ describe('MongoDB Connection Pooling', () => {
 
   it('should maintain connection across requests', async () => {
     const conn1 = await connectToDatabase();
-    await closeTestDB();
+    await teardownMongoDb();
     const conn2 = await connectToDatabase();
     expect(conn2.readyState).toBe(1);
   });

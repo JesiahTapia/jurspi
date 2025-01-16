@@ -1,11 +1,26 @@
 import { createMocks } from 'node-mocks-http';
 import { documentAccessMiddleware } from '@/lib/middleware/documentAccessMiddleware';
-import { setupTestDB, closeTestDB, clearTestDB, createTestUser, createTestCase, createTestDocument } from '../api/setup';
+import { 
+  setupMongoDb, 
+  teardownMongoDb, 
+  clearMongoDb, 
+  createTestUser, 
+  createTestCase,
+  s3Mock 
+} from '@/tests/utils/testUtils';
+import { Document } from '@/lib/models/Document';
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { hash } from 'bcryptjs';
+import { S3Client } from '@aws-sdk/client-s3';
+import { mockClient } from 'aws-sdk-client-mock';
+import User from '@/lib/models/User';
+import { Case } from '@/models/Case';
 
 describe('Document Access Middleware', () => {
-  beforeAll(async () => await setupTestDB());
-  afterAll(async () => await closeTestDB());
-  beforeEach(async () => await clearTestDB());
+  beforeAll(async () => await setupMongoDb());
+  afterAll(async () => await teardownMongoDb());
+  beforeEach(async () => await clearMongoDb());
 
   const mockHandler = jest.fn((req, res) => {
     return res.status(200).json({ success: true });
@@ -47,4 +62,19 @@ describe('Document Access Middleware', () => {
     expect(res._getStatusCode()).toBe(403);
     expect(mockHandler).not.toHaveBeenCalled();
   });
-}); 
+});
+
+export async function createTestDocument(caseId: string, userId: string) {
+  return Document.create({
+    title: 'Test Document',
+    type: 'EVIDENCE',
+    fileUrl: 'https://example.com/test.pdf',
+    uploadedBy: userId,
+    caseId: caseId,
+    documentId: new mongoose.Types.ObjectId().toString(),
+    metadata: {
+      size: 1024,
+      mimeType: 'application/pdf'
+    }
+  });
+} 

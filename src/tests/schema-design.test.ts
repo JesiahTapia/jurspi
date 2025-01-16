@@ -2,12 +2,12 @@ import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import Case from '../lib/models/Case';
 import Arbitrator from '../lib/models/Arbitrator';
-import { setupTestDB, closeTestDB, clearTestDB, createTestUser } from './shared/testSetup';
+import { setupMongoDb, teardownMongoDb, clearMongoDb, createTestUser } from '@/tests/utils/testUtils';
 
 describe('Schema Design', () => {
-  beforeAll(async () => await setupTestDB());
-  afterAll(async () => await closeTestDB());
-  beforeEach(async () => await clearTestDB());
+  beforeAll(async () => await setupMongoDb());
+  afterAll(async () => await teardownMongoDb());
+  beforeEach(async () => await clearMongoDb());
 
   // Test Case Schema
   describe('Case Schema', () => {
