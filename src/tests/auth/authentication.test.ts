@@ -1,5 +1,5 @@
 import { createMocks } from 'node-mocks-http';
-import { setupTestDB, closeTestDB, clearTestDB } from '../setup';
+import { setupMongoDb, teardownMongoDb, clearMongoDb } from '@/tests/utils/testUtils';
 import registerHandler from '@/pages/api/auth/register';
 import resetPasswordHandler from '@/pages/api/auth/reset-password';
 import { getServerSession } from 'next-auth/next';
@@ -8,10 +8,10 @@ import User from '@/lib/models/User';
 jest.mock('next-auth/next');
 
 describe('Authentication System', () => {
-  beforeAll(async () => await setupTestDB());
-  afterAll(async () => await closeTestDB());
+  beforeAll(async () => await setupMongoDb());
+  afterAll(async () => await teardownMongoDb());
   beforeEach(async () => {
-    await clearTestDB();
+    await clearMongoDb();
     jest.clearAllMocks();
   });
 

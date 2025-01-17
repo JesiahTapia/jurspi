@@ -1,15 +1,21 @@
 import { createMocks } from 'node-mocks-http';
 import { getServerSession } from 'next-auth/next';
 import documentHandler from '@/pages/api/cases/[id]/documents';
-import { createTestUser, createTestCase, setupTestDB, closeTestDB, clearTestDB } from '../setup';
+import { 
+  setupMongoDb, 
+  teardownMongoDb, 
+  clearMongoDb,
+  createTestUser,
+  createTestCase 
+} from '@/tests/utils/testUtils';
 
 jest.mock('next-auth/next');
 
 describe('Case Documents API', () => {
-  beforeAll(async () => await setupTestDB());
-  afterAll(async () => await closeTestDB());
+  beforeAll(async () => await setupMongoDb());
+  afterAll(async () => await teardownMongoDb());
   beforeEach(async () => {
-    await clearTestDB();
+    await clearMongoDb();
     jest.clearAllMocks();
   });
 

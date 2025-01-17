@@ -1,20 +1,28 @@
 import { createMocks } from 'node-mocks-http';
 import versionHandler from '@/pages/api/documents/[id]/version';
-import { setupTestDB, createTestUser, createTestDocument } from './setup';
+import { 
+  setupMongoDb, 
+  teardownMongoDb, 
+  clearMongoDb,
+  createTestUser, 
+  createTestDocument 
+} from '@/tests/utils/testUtils';
 import Case from '@/lib/models/Case';
 import { getServerSession } from 'next-auth/next';
 
 jest.mock('next-auth/next');
 
 describe('Document Versioning', () => {
-  let mongod;
-
   beforeAll(async () => {
-    mongod = await setupTestDB();
+    await setupMongoDb();
   });
 
   afterAll(async () => {
-    await mongod.stop();
+    await teardownMongoDb();
+  });
+
+  beforeEach(async () => {
+    await clearMongoDb();
   });
 
   it('should increment document version', async () => {

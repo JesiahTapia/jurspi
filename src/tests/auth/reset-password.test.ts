@@ -1,12 +1,12 @@
 import { createMocks } from 'node-mocks-http';
 import resetPasswordHandler from '@/pages/api/auth/reset-password';
 import User from '@/lib/models/User';
-import { connectTestDb, disconnectTestDb, clearTestDb } from '../utils/testDb';
+import { setupMongoDb, teardownMongoDb, clearMongoDb } from '@/tests/utils/testUtils';
 
 describe('Password Reset', () => {
-  beforeAll(async () => await connectTestDb());
-  afterAll(async () => await disconnectTestDb());
-  beforeEach(async () => await clearTestDb());
+  beforeAll(async () => await setupMongoDb());
+  afterAll(async () => await teardownMongoDb());
+  beforeEach(async () => await clearMongoDb());
 
   it('should generate reset token', async () => {
     const user = await User.create({

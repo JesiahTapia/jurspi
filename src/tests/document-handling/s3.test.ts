@@ -1,5 +1,5 @@
 import { generateUploadUrl, deleteFile } from '@/lib/s3';
-import { s3Mock, setupTestDB } from './setup';
+import { s3Mock, setupMongoDb } from '@/tests/utils/testUtils';
 import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 describe('S3 Integration', () => {

@@ -2,12 +2,12 @@ import { createMocks } from 'node-mocks-http';
 import registerHandler from '@/pages/api/auth/register';
 import loginHandler from '@/pages/api/auth/login';
 import resetPasswordHandler from '@/pages/api/auth/reset-password';
-import { connectTestDb, disconnectTestDb, clearTestDb } from '../utils/testDb';
+import { setupMongoDb, teardownMongoDb, clearMongoDb } from '@/tests/utils/testUtils';
 
 describe('Authentication API', () => {
-  beforeAll(async () => await connectTestDb());
-  afterAll(async () => await disconnectTestDb());
-  afterEach(async () => await clearTestDb());
+  beforeAll(async () => await setupMongoDb());
+  afterAll(async () => await teardownMongoDb());
+  afterEach(async () => await clearMongoDb());
 
   describe('Registration', () => {
     it('should register a new user successfully', async () => {

@@ -1,17 +1,23 @@
 import { createMocks } from 'node-mocks-http';
 import uploadHandler from '@/pages/api/documents/upload';
-import { setupTestDB, createTestUser, createTestCase } from '../api/setup';
+import { 
+  setupMongoDb, 
+  teardownMongoDb, 
+  clearMongoDb,
+  createTestUser, 
+  createTestCase,
+  s3Mock 
+} from '@/tests/utils/testUtils';
 import { getServerSession } from 'next-auth/next';
-import { s3Mock } from './setup';
 
 jest.mock('next-auth/next');
 
 describe('Document Upload', () => {
-  beforeAll(async () => await setupTestDB());
-  afterAll(async () => await closeTestDB());
+  beforeAll(async () => await setupMongoDb());
+  afterAll(async () => await teardownMongoDb());
   
   beforeEach(async () => {
-    await clearTestDB();
+    await clearMongoDb();
     s3Mock.reset();
     jest.clearAllMocks();
   });

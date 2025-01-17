@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import healthHandler from '@/pages/api/health/database';
-import { connectToDatabase } from '@/lib/mongodb';
+import { setupMongoDb, teardownMongoDb, clearMongoDb } from '@/tests/utils/testUtils';
 import mongoose from 'mongoose';
 
 const createMockReq = (): Partial<NextApiRequest> => ({
@@ -18,18 +18,15 @@ const createMockRes = () => {
 
 describe('Database Health Endpoint', () => {
   beforeAll(async () => {
-    await connectToDatabase();
+    await setupMongoDb();
   });
 
   afterAll(async () => {
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
-    }
+    await teardownMongoDb();
   });
 
   beforeEach(async () => {
-    const collections = await mongoose.connection.db.collections();
-    await Promise.all(collections.map(c => c.deleteMany({})));
+    await clearMongoDb();
   });
 
   it('should return 200 when database is connected', async () => {
