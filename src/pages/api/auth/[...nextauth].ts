@@ -4,7 +4,7 @@ import { connectToDatabase } from '@/lib/db';
 import User from '@/lib/models/User';
 import bcrypt from 'bcryptjs';
 
-export default NextAuth({
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -62,4 +62,6 @@ export default NextAuth({
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET
-}); 
+};
+
+export default NextAuth(authOptions); 

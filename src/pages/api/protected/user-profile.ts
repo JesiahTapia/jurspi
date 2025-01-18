@@ -27,4 +27,4 @@ export default async function handler(
     console.error('Profile fetch error:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
-} 
+}

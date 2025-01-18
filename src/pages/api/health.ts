@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { connectToDatabase } from '@/lib/providers/database';
+import { connectToDatabase } from '@/lib/db';
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,7 +11,7 @@ export default async function handler(
 
   try {
     const conn = await connectToDatabase();
-    const isConnected = conn.connection.readyState === 1;
+    const isConnected = conn.readyState === 1;
     
     return res.status(200).json({
       status: 'success',

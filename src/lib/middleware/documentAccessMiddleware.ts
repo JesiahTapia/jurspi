@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Document } from '@/lib/models/Document';
-import { Case } from '@/lib/models/Case';w
+import Case from '@/lib/models/Case';
 
 export const documentAccessMiddleware = (handler: any) => async (
   req: NextApiRequest,

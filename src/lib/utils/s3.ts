@@ -26,4 +26,4 @@ export const deleteFile = async (key: string) => {
   });
 
   return s3Client.send(command);
-}; ww
+}; 
