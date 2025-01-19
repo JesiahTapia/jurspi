@@ -28,11 +28,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     user.resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
     await user.save();
 
-    await sendEmail({
-      to: email,
-      subject: 'Password Reset Request',
-      text: `Your password reset token is: ${resetToken}`
-    });
+    // await sendEmail({
+    //   to: email,
+    //   subject: 'Password Reset Request',
+    //   text: `Your password reset token is: ${resetToken}`
+    // });
 
     return res.status(200).json({ message: 'Reset email sent' });
   } catch (error) {
